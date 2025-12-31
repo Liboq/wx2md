@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { ViewTransitionLink } from "@/components/view-transition-link"
 import { FileText, Download, ImageIcon, History, Zap, Shield } from "lucide-react"
 
 export default function Home() {
@@ -18,11 +19,11 @@ export default function Home() {
             <p className="text-xl text-muted-foreground mb-8 text-pretty">
               快速将微信公众号文章转换为 Markdown 格式，支持批量处理、图片下载和本地存储
             </p>
-            <Link href="/converter">
+            <ViewTransitionLink href="/converter">
               <Button size="lg" className="text-lg px-8 py-6">
                 开始转换
               </Button>
-            </Link>
+            </ViewTransitionLink>
           </div>
         </section>
 

@@ -2,11 +2,15 @@
 
 import Link from "next/link"
 import { SmoothScrollLink } from "@/components/smooth-scroll-link"
+import { ViewTransitionLink } from "@/components/view-transition-link"
 import { Mail } from "lucide-react"
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/50">
+    <footer 
+      className="border-t bg-muted/50"
+      style={{ viewTransitionName: "footer" }}
+    >
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
@@ -28,9 +32,9 @@ export function Footer() {
                 </SmoothScrollLink>
               </li>
               <li>
-                <Link href="/converter" className="text-muted-foreground hover:text-foreground transition-colors">
+                <ViewTransitionLink href="/converter" className="text-muted-foreground hover:text-foreground transition-colors">
                   开始转换
-                </Link>
+                </ViewTransitionLink>
               </li>
             </ul>
           </div>

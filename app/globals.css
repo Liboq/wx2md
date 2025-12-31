@@ -154,3 +154,74 @@
     display: block;
   }
 }
+
+/* View Transition API 支持 */
+@view-transition {
+  navigation: auto;
+}
+
+/* 防止闪烁 - 确保视图过渡元素正确初始化 */
+::view-transition-group(root) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 导航栏和页脚固定，不参与页面切换动画 */
+::view-transition-old(header),
+::view-transition-new(header),
+::view-transition-old(footer),
+::view-transition-new(footer) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* 页面切换动画 - 使用 CSS 变量动态控制 */
+::view-transition-old(root) {
+  position: absolute;
+  inset: 0;
+  animation: var(--vt-old-animation, slideOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards);
+}
+
+::view-transition-new(root) {
+  position: absolute;
+  inset: 0;
+  animation: var(--vt-new-animation, slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards);
+}
+
+/* 前进动画 */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* 后退动画 */
+@keyframes slideBackNew {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideBackOld {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
