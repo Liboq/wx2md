@@ -189,16 +189,16 @@ export default function ConverterPage() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold mb-2 text-balance">微信公众号文章转换器</h1>
-          <p className="text-muted-foreground">将微信公众号文章轻松转换为 Markdown 格式</p>
+      <main className="container mx-auto px-4 py-4 md:py-8 max-w-7xl">
+        <div className="mb-6 md:mb-8 text-center">
+          <h1 className="text-2xl md:text-4xl font-bold mb-2 text-balance">微信公众号文章转换器</h1>
+          <p className="text-sm md:text-base text-muted-foreground">将微信公众号文章轻松转换为 Markdown 格式</p>
         </div>
 
-        <div className="flex gap-6">
-          {/* 左侧垂直导航栏 */}
-          <Card className="w-48 shrink-0 p-4 shadow-lg h-fit sticky top-8">
-            <nav className="space-y-2">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+          {/* 导航栏 - 移动端在上方，桌面端在左侧 */}
+          <Card className="w-full md:w-48 shrink-0 p-0 md:p-4 shadow-lg md:h-fit md:sticky md:top-8 overflow-hidden">
+            <nav className="flex md:flex-col gap-2 md:gap-0 md:space-y-2 overflow-x-auto md:overflow-x-visible scrollbar-hide md:scrollbar-default px-3 py-3 md:px-0 md:py-0">
               {navItems.map((item) => {
                 const Icon = item.icon
                 return (
@@ -207,24 +207,25 @@ export default function ConverterPage() {
                     onClick={() => !item.disabled && setActiveTab(item.value)}
                     disabled={item.disabled}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all",
-                      "hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                      "flex items-center justify-center md:justify-start gap-2 md:gap-3 px-4 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap",
+                      "cursor-pointer hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                      "md:w-full shrink-0",
                       activeTab === item.value
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span>{item.label}</span>
                   </button>
                 )
               })}
             </nav>
           </Card>
 
-          {/* 右侧内容区 */}
-          <Card className="flex-1 shadow-lg">
-            <div className="p-6">
+          {/* 内容区 */}
+          <Card className="flex-1 shadow-lg w-full">
+            <div className="p-4 md:p-6">
               {activeTab === "convert" && (
                 <ConvertTab
                   articles={articles}

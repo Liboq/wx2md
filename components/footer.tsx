@@ -1,4 +1,8 @@
+"use client"
+
 import Link from "next/link"
+import { SmoothScrollLink } from "@/components/smooth-scroll-link"
+import { Mail } from "lucide-react"
 
 export function Footer() {
   return (
@@ -14,14 +18,14 @@ export function Footer() {
             <h3 className="font-semibold mb-3">快速链接</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/#features" className="text-muted-foreground hover:text-foreground transition-colors">
+                <SmoothScrollLink href="/#features" className="text-muted-foreground hover:text-foreground transition-colors">
                   功能介绍
-                </Link>
+                </SmoothScrollLink>
               </li>
               <li>
-                <Link href="/#guide" className="text-muted-foreground hover:text-foreground transition-colors">
+                <SmoothScrollLink href="/#guide" className="text-muted-foreground hover:text-foreground transition-colors">
                   操作指南
-                </Link>
+                </SmoothScrollLink>
               </li>
               <li>
                 <Link href="/converter" className="text-muted-foreground hover:text-foreground transition-colors">
@@ -35,16 +39,30 @@ export function Footer() {
             <h3 className="font-semibold mb-3">法律</h3>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/#privacy" className="text-muted-foreground hover:text-foreground transition-colors">
+                <SmoothScrollLink href="/#privacy" className="text-muted-foreground hover:text-foreground transition-colors">
                   隐私政策
-                </Link>
+                </SmoothScrollLink>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} 微信文章转换器. All rights reserved.
+        <div className="mt-8 pt-8 border-t">
+          <div className="flex flex-col items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Mail className="h-4 w-4" />
+              <span>联系方式：</span>
+              <a
+                href="mailto:2661158759@qq.com"
+                className="text-primary hover:underline transition-colors"
+              >
+                2661158759@qq.com
+              </a>
+            </div>
+            <div className="text-center">
+              © {new Date().getFullYear()} 微信文章转换器. All rights reserved.
+            </div>
+          </div>
         </div>
       </div>
     </footer>

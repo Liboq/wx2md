@@ -43,25 +43,25 @@ export function ConvertTab({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold mb-2">转换微信公众号文章</h2>
-        <p className="text-muted-foreground">输入一个或多个微信公众号文章的URL，将其转换为Markdown格式</p>
+        <h2 className="text-xl md:text-2xl font-semibold mb-2">转换微信公众号文章</h2>
+        <p className="text-sm md:text-base text-muted-foreground">输入一个或多个微信公众号文章的URL，将其转换为Markdown格式</p>
       </div>
 
       <div className="space-y-3">
         {articles.map((article, index) => (
           <div key={article.id} className="flex gap-2 items-start">
-            <div className="flex-1 relative">
-              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <div className="flex-1 relative min-w-0">
+              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
               <Input
                 placeholder={`https://mp.weixin.qq.com/s/...`}
                 value={article.url}
                 onChange={(e) => onUpdateUrl(article.id, e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full text-sm md:text-base"
                 disabled={isFetching}
               />
-              {article.status === "error" && <p className="text-sm text-destructive mt-1">{article.error}</p>}
+              {article.status === "error" && <p className="text-xs md:text-sm text-destructive mt-1">{article.error}</p>}
             </div>
             {articles.length > 1 && (
               <Button
@@ -69,7 +69,7 @@ export function ConvertTab({
                 size="icon"
                 onClick={() => onRemoveArticle(article.id)}
                 disabled={isFetching}
-                className="shrink-0"
+                className="shrink-0 h-10 w-10"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -78,22 +78,22 @@ export function ConvertTab({
         ))}
       </div>
 
-      <Button variant="outline" onClick={onAddArticle} disabled={isFetching} className="w-full bg-transparent">
+      <Button variant="outline" onClick={onAddArticle} disabled={isFetching} className="w-full bg-transparent text-sm md:text-base">
         <Plus className="h-4 w-4 mr-2" />
         添加更多文章
       </Button>
 
-      <p className="text-sm text-muted-foreground">输入微信公众号文章的URL（例如：https://mp.weixin.qq.com/s/...）</p>
+      <p className="text-xs md:text-sm text-muted-foreground">输入微信公众号文章的URL（例如：https://mp.weixin.qq.com/s/...）</p>
 
       <Button
         onClick={handleFetch}
         disabled={!hasValidUrls || isFetching}
-        className="w-full h-12 text-base font-semibold"
+        className="w-full h-11 md:h-12 text-sm md:text-base font-semibold"
         size="lg"
       >
         {isFetching ? (
           <>
-            <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+            <Loader2 className="h-4 w-4 md:h-5 md:w-5 mr-2 animate-spin" />
             获取中...
           </>
         ) : (
@@ -103,8 +103,8 @@ export function ConvertTab({
 
       <Alert className="bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900">
         <AlertDescription>
-          <p className="font-semibold mb-2 text-amber-900 dark:text-amber-100">使用说明：</p>
-          <ol className="space-y-1 text-sm text-amber-800 dark:text-amber-200 list-decimal list-inside">
+          <p className="font-semibold mb-2 text-xs md:text-sm text-amber-900 dark:text-amber-100">使用说明：</p>
+          <ol className="space-y-1 text-xs md:text-sm text-amber-800 dark:text-amber-200 list-decimal list-inside">
             <li>输入一个或多个微信公众号文章链接</li>
             <li>点击"获取文章内容"按钮，工具将获取文章的原始内容</li>
             <li>在内容预览页面中，点击"转换为Markdown"按钮进行转换</li>
