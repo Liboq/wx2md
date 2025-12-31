@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { FileText } from "lucide-react"
+import Image from "next/image"
 
 export function Header() {
   return (
@@ -10,8 +11,7 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2 font-semibold text-lg">
-            <FileText className="h-6 w-6" />
-            <span>微信文章转换器</span>
+            <Image className="w-40 h-40" src="/logo.png" alt="微信文章转换器" width={64} height={64} />
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
