@@ -27,6 +27,7 @@
 - ✅ Markdown 格式转换
 - ✅ 本地历史记录管理
 - ✅ 灵活的导出选项（单独 Markdown 或完整 ZIP 包）
+- ✅ 流光卡片图片导出（将 Markdown 转换为精美图片）
 
 ## 📢 营销文案
 
@@ -84,6 +85,14 @@
 - 最多保存 50 条记录（可配置）
 - 数据存储在浏览器本地（localStorage）
 
+### 7. 流光卡片图片导出 🆕
+- **精美卡片设计**：将 Markdown 内容转换为精美的图片卡片
+- **多种模板**：支持 8 种模板样式（默认、金句、书摘、便当、备忘录等）
+- **智能分段**：根据内容长度和高度自动分段，长文章自动生成多张图片
+- **自动打包**：多张图片自动打包为 ZIP 压缩包
+- **自定义配置**：可调整宽度、高度、内边距、分辨率等参数
+- **一键导出**：单张图片直接下载，多张图片自动打包
+
 ## 🛠 技术栈
 
 ### 前端框架
@@ -102,6 +111,12 @@
 - **JSZip** - ZIP 文件生成
 - **React Markdown** - Markdown 渲染
 - **Remark GFM** - GitHub Flavored Markdown 支持
+- **流光卡片 API** - 将文本转换为精美图片（由 302.ai 提供）
+
+### 其他特性
+- **View Transition API** - 流畅的页面切换动画
+- **next-themes** - 主题切换（亮色/暗色模式）
+- **响应式设计** - 完美适配移动端和桌面端
 
 ## 🚀 快速开始
 
@@ -170,6 +185,18 @@ pnpm start
    - **仅 Markdown**：下载单独的 `.md` 文件
    - **完整包（含图片）**：下载包含 Markdown 和图片的 ZIP 文件
 2. 批量转换时，可以点击"下载完整压缩包"一次性下载所有文章
+
+#### 步骤 6：导出为图片（可选）🆕
+1. 在"MD预览"标签页中，点击文章卡片上的 **"导出为图片"** 按钮
+2. 在配置弹窗中设置：
+   - **模板类型**：选择喜欢的卡片模板（默认、金句、书摘等）
+   - **标题和内容**：可以编辑标题和内容
+   - **样式设置**：调整宽度、高度、内边距
+   - **分辨率**：选择图片清晰度（1x/2x/3x）
+3. 点击 **"导出图片"** 按钮
+4. 系统会自动判断：
+   - 内容较短 → 生成单张 PNG 图片并下载
+   - 内容较长 → 自动分段生成多张图片并打包为 ZIP
 
 ### 历史记录功能
 
@@ -286,9 +313,17 @@ we-chat-article-to-markdown/
 │   ├── history-tab.tsx           # 历史记录标签页
 │   ├── html-preview-tab.tsx     # HTML 预览标签页
 │   ├── markdown-preview-tab.tsx  # Markdown 预览标签页
+│   ├── firefly-card-config-dialog.tsx  # 流光卡片配置弹窗 🆕
+│   ├── view-transition-link.tsx  # 视图过渡链接组件
+│   ├── view-transition-provider.tsx  # 视图过渡提供者
+│   ├── smooth-scroll-link.tsx    # 平滑滚动链接组件
 │   ├── header.tsx                # 页头组件
 │   ├── footer.tsx                # 页脚组件
 │   └── theme-provider.tsx        # 主题提供者
+├── hooks/                        # React Hooks
+│   ├── use-mobile.ts             # 移动端检测 Hook
+│   ├── use-toast.ts              # Toast 通知 Hook
+│   └── use-view-transition-router.ts  # 视图过渡路由 Hook 🆕
 ├── hooks/                        # React Hooks
 │   ├── use-mobile.ts             # 移动端检测 Hook
 │   └── use-toast.ts              # Toast 通知 Hook
@@ -413,6 +448,78 @@ interface HistoryArticle {
    - 每个文件夹包含 Markdown 文件和 `images/` 文件夹
    - 文件名格式：`wechat_articles_{timestamp}.zip`
 
+### 5. 流光卡片图片导出 🆕 (`components/markdown-preview-tab.tsx`)
+
+**功能：** 将 Markdown 内容转换为精美的图片卡片
+
+**实现原理：**
+
+1. **内容分段算法**
+   - 根据图片高度、宽度和内边距计算可用内容区域
+   - 考虑标题和作者占用的空间（约 150px）
+   - 估算每行字符数和每页行数
+   - 智能按段落分割内容，确保每段不超过单页容量
+
+2. **API 调用**
+   - 使用流光卡片 API (`https://fireflycard-api.302ai.cn/api/saveImg`)
+   - POST 请求，JSON 格式传递配置参数
+   - 每次调用生成一张图片
+
+3. **自动判断导出方式**
+   - 如果只有一段内容 → 调用一次 API → 直接下载 PNG
+   - 如果有多段内容 → 循环调用 API → 收集所有图片 → 打包为 ZIP
+
+**配置参数：**
+
+```typescript
+{
+  form: {
+    title: string      // 标题
+    content: string    // 内容（Markdown 格式）
+    author?: string   // 作者（可选）
+  },
+  style: {
+    width: number     // 宽度（px），默认 800
+    height: number    // 高度（px），默认 1200
+    padding: number   // 内边距（px），默认 40
+  },
+  temp: string       // 模板类型（tempA, tempC, tempJin 等）
+  imgScale: number   // 分辨率（1/2/3），默认 2
+}
+```
+
+**支持的模板：**
+- `tempA` - 默认模板 A
+- `tempC` - 默认模板 C
+- `tempJin` - 金句模板
+- `tempB` - 书摘模板
+- `tempEasy` - 便当模板
+- `tempMemo` - 备忘录模板
+- `tempBlackSun` - 黑日模板
+- `tempE` - 框界模板
+
+**关键代码：**
+```typescript
+// 计算分段
+const maxCharsPerPage = Math.floor(charsPerLine * linesPerPage * 0.8)
+
+// 智能分段
+if (segments.length === 1) {
+  // 单张图片：直接下载
+  const blob = await response.blob()
+  downloadFile(blob, `${title}.png`)
+} else {
+  // 多张图片：打包为 ZIP
+  const zip = new JSZip()
+  for (const segment of segments) {
+    const blob = await generateImage(segment)
+    zip.file(`firefly_card_${index}.png`, blob)
+  }
+  const zipBlob = await zip.generateAsync({ type: "blob" })
+  downloadFile(zipBlob, `${title}_cards.zip`)
+}
+```
+
 ## 🔒 隐私与安全
 
 ### 数据处理方式
@@ -492,6 +599,30 @@ interface HistoryArticle {
 - 逐个转换为 Markdown
 - 最后可以一次性下载所有文章
 
+### Q6: 如何导出为图片？🆕
+
+**操作步骤：**
+1. 完成文章转换后，切换到"MD预览"标签页
+2. 点击文章卡片上的"导出为图片"按钮
+3. 在弹窗中配置卡片参数（模板、样式、尺寸等）
+4. 点击"导出图片"按钮即可
+
+**说明：**
+- 系统会根据内容长度和高度自动判断生成单张或多张图片
+- 内容较长时会自动分段并打包为 ZIP
+- 可以调整高度来控制每张图片的内容量
+- 建议使用 2x 分辨率，平衡清晰度和文件大小
+
+**常见问题：**
+- **Q: 为什么生成了多张图片？**  
+  A: 当内容超过单张图片容量时，系统会自动分段。可以调整高度参数来控制分段。
+
+- **Q: 图片清晰度如何选择？**  
+  A: 1x 适合快速预览，2x 适合一般使用（推荐），3x 适合高质量输出。
+
+- **Q: 可以自定义卡片样式吗？**  
+  A: 目前支持调整宽度、高度、内边距和模板类型。更多样式定制请参考流光卡片 API 文档。
+
 ## 💻 开发说明
 
 ### 开发环境设置
@@ -543,20 +674,48 @@ pnpm lint
    - 添加 Markdown 编辑器
    - 支持自定义转换规则
    - 添加导出为 PDF 功能
+   - 支持更多流光卡片模板和样式定制
 
 2. **性能优化**
    - 添加图片压缩功能
    - 优化批量处理性能
    - 添加进度条显示
+   - 优化流光卡片生成性能
 
 3. **用户体验**
    - 添加拖拽上传功能
    - 支持快捷键操作
-   - 添加主题切换动画
+   - 流光卡片预览功能
+   - 批量导出图片功能
+
+4. **已实现功能** ✅
+   - View Transition API 页面切换动画
+   - 亮色/暗色主题切换
+   - 响应式移动端适配
+   - 流光卡片图片导出
 
 ## 📝 更新日志
 
-### v0.1.0 (当前版本)
+### v0.2.0 (最新版本) 🆕
+- ✨ **新增功能**：流光卡片图片导出
+  - 支持将 Markdown 内容转换为精美图片卡片
+  - 8 种模板样式可选
+  - 智能分段，自动处理长文章
+  - 可自定义尺寸、样式、分辨率
+- ✨ **UI 优化**：蓝色系主题设计
+  - 专业的蓝色系配色方案
+  - 极简主义设计风格
+  - 完善的亮色/暗色模式支持
+- ✨ **交互优化**：流畅的页面切换动画
+  - 使用 View Transition API 实现平滑过渡
+  - 前进/后退导航动画
+  - 导航栏固定，不参与动画
+- 🎨 **样式优化**：响应式设计改进
+  - 移动端导航栏优化
+  - 英雄区域设计优化
+  - 整体间距和留白优化
+
+### v0.1.0
 - ✅ 基础功能实现
 - ✅ 文章获取和转换
 - ✅ 图片下载和处理
