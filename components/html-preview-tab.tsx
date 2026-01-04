@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { FileText, Loader2, Sparkles, Code2, Clipboard } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/i18n/context"
 
 interface Article {
   id: string
@@ -21,6 +22,7 @@ interface HtmlPreviewTabProps {
 
 export function HtmlPreviewTab({ articles, onConvert }: HtmlPreviewTabProps) {
   const { toast } = useToast()
+  const { t, language } = useLanguage()
 
   const handleCopyToWeChat = async (article: Article) => {
     if (!article.htmlContent) return
@@ -46,13 +48,13 @@ export function HtmlPreviewTab({ articles, onConvert }: HtmlPreviewTabProps) {
       selection?.removeAllRanges()
 
       toast({
-        title: "复制成功",
-        description: "内容已复制，可直接粘贴到微信公众号编辑器",
+        title: t.language === "zh" ? "复制成功" : "Copied Successfully",
+        description: t.language === "zh" ? "内容已复制，可直接粘贴到微信公众号编辑器" : "Content copied, can be pasted directly into WeChat editor",
       })
     } catch (error) {
       toast({
-        title: "复制失败",
-        description: "请手动选择内容进行复制",
+        title: t.language === "zh" ? "复制失败" : "Copy Failed",
+        description: t.language === "zh" ? "请手动选择内容进行复制" : "Please manually select content to copy",
         variant: "destructive",
       })
     }
@@ -60,77 +62,79 @@ export function HtmlPreviewTab({ articles, onConvert }: HtmlPreviewTabProps) {
 
   const handleConvert = async (articleId: string) => {
     toast({
-      title: "开始转换",
-      description: "正在将文章转换为Markdown格式...",
+      title: t.language === "zh" ? "开始转换" : "Conversion Started",
+      description: t.language === "zh" ? "正在将文章转换为Markdown格式..." : "Converting article to Markdown format...",
     })
     await onConvert(articleId)
     toast({
-      title: "转换成功",
-      description: "文章已成功转换为Markdown格式",
+      title: t.language === "zh" ? "转换成功" : "Conversion Successful",
+      description: t.language === "zh" ? "文章已成功转换为Markdown格式" : "Article successfully converted to Markdown format",
     })
   }
 
   if (articles.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>暂无文章预览</p>
+      <div className="text-center py-8 sm:py-12 text-muted-foreground">
+        <FileText className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
+        <p className="text-sm sm:text-base">{t.htmlPreview.noArticles}</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-2">文章内容预览</h2>
-        <p className="text-muted-foreground">查看文章原始内容，点击按钮转换为Markdown格式</p>
+    <div className="space-y-6 sm:space-y-8 md:space-y-10">
+      {/* 标题区域 - 弱化描述 */}
+      <div className="space-y-2">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{t.htmlPreview.title}</h2>
+        <p className="text-sm sm:text-base text-muted-foreground/70">{t.htmlPreview.description}</p>
       </div>
 
       {articles.map((article) => (
-        <Card key={article.id} className="p-6 space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold mb-2">{article.title || "无标题"}</h3>
+        <Card key={article.id} className="p-6 sm:p-8 md:p-10 space-y-6 border-border/50">
+          <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-4 sm:gap-6">
+            <div className="flex-1 w-full sm:w-auto">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 text-foreground">{article.title || (language === "zh" ? "无标题" : "Untitled")}</h3>
             </div>
-            <div className="flex gap-2 shrink-0">
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto shrink-0">
               <Button
                 variant="outline"
                 onClick={() => handleCopyToWeChat(article)}
                 disabled={!article.htmlContent}
                 size="lg"
+                className="w-full sm:w-auto min-h-[48px] text-sm sm:text-base"
               >
                 <Clipboard className="h-4 w-4 mr-2" />
-                复制到公众号
+                {t.htmlPreview.copyToWeChat}
               </Button>
               <Button
                 onClick={() => handleConvert(article.id)}
                 disabled={article.status === "converting" || article.status === "converted"}
-                className="min-w-[140px]"
+                className="w-full sm:w-auto sm:min-w-[160px] min-h-[48px] text-sm sm:text-base font-semibold"
                 size="lg"
               >
                 {article.status === "converting" ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    转换中...
+                    {t.htmlPreview.converting}
                   </>
                 ) : article.status === "converted" ? (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    已转换
+                    {t.htmlPreview.converted}
                   </>
                 ) : (
                   <>
                     <Code2 className="h-4 w-4 mr-2" />
-                    转换为Markdown
+                    {t.htmlPreview.convertToMarkdown}
                   </>
                 )}
               </Button>
             </div>
           </div>
 
-          <Separator />
+          <Separator className="my-6" />
 
-          <ScrollArea className="h-[500px] w-full rounded-md border p-4 bg-muted/30">
+          <ScrollArea className="h-[400px] sm:h-[500px] md:h-[600px] w-full rounded-md border border-border/50 p-4 sm:p-6 bg-muted/30">
             <div
               className="prose prose-sm dark:prose-invert max-w-none"
               dangerouslySetInnerHTML={{ __html: article.htmlContent || "" }}

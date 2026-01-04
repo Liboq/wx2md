@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Plus, Link2, Loader2, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/i18n/context"
 
 interface Article {
   id: string
@@ -33,35 +34,38 @@ export function ConvertTab({
   isFetching,
 }: ConvertTabProps) {
   const { toast } = useToast()
+  const { t } = useLanguage()
 
   const handleFetch = async () => {
     toast({
-      title: "开始获取",
-      description: "正在获取文章内容...",
+      title: t.language === "zh" ? "开始获取" : "Fetching Started",
+      description: t.language === "zh" ? "正在获取文章内容..." : "Fetching article content...",
     })
     await onFetch()
   }
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      <div className="space-y-2">
-        <h2 className="text-2xl md:text-3xl font-bold text-foreground">转换微信公众号文章</h2>
-        <p className="text-base md:text-lg text-muted-foreground leading-relaxed">输入一个或多个微信公众号文章的URL，将其转换为Markdown格式</p>
+    <div className="space-y-8 md:space-y-10 lg:space-y-12">
+      {/* 标题区域 - 弱化描述，突出标题 */}
+      <div className="space-y-3">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground">{t.convert.title}</h2>
+        <p className="text-sm md:text-base text-muted-foreground/70 leading-relaxed max-w-2xl">{t.convert.description}</p>
       </div>
 
-      <div className="space-y-4">
+      {/* 输入区域 - 增加间距 */}
+      <div className="space-y-4 sm:space-y-5">
         {articles.map((article, index) => (
           <div key={article.id} className="flex gap-2 items-start">
             <div className="flex-1 relative min-w-0">
-              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+              <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
               <Input
-                placeholder={`https://mp.weixin.qq.com/s/...`}
+                placeholder={t.convert.placeholder}
                 value={article.url}
                 onChange={(e) => onUpdateUrl(article.id, e.target.value)}
-                className="pl-10 w-full text-sm md:text-base border-border/50 focus:border-primary focus:ring-primary/20"
+                className="pl-10 w-full text-sm sm:text-base border-border/50 focus:border-primary focus:ring-primary/20 min-h-[44px]"
                 disabled={isFetching}
               />
-              {article.status === "error" && <p className="text-xs md:text-sm text-destructive mt-1">{article.error}</p>}
+              {article.status === "error" && <p className="text-xs sm:text-sm text-destructive mt-1.5">{article.error}</p>}
             </div>
             {articles.length > 1 && (
               <Button
@@ -69,7 +73,7 @@ export function ConvertTab({
                 size="icon"
                 onClick={() => onRemoveArticle(article.id)}
                 disabled={isFetching}
-                className="shrink-0 h-10 w-10"
+                className="shrink-0 h-11 w-11 sm:h-10 sm:w-10 min-h-[44px] min-w-[44px]"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -78,43 +82,49 @@ export function ConvertTab({
         ))}
       </div>
 
-      <Button 
-        variant="outline" 
-        onClick={onAddArticle} 
-        disabled={isFetching} 
-        className="w-full bg-transparent border-border/50 hover:border-primary/30 hover:bg-accent/50 text-sm md:text-base transition-all duration-200"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        添加更多文章
-      </Button>
+      {/* 次要操作 - 弱化样式 */}
+      <div className="space-y-3">
+        <Button 
+          variant="outline" 
+          onClick={onAddArticle} 
+          disabled={isFetching} 
+          className="w-full bg-transparent border-border/50 hover:border-primary/30 hover:bg-accent/50 text-sm sm:text-base transition-all duration-200 min-h-[44px]"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          {t.convert.addMore}
+        </Button>
+        <p className="text-xs sm:text-sm text-muted-foreground/60 leading-relaxed text-center">{t.convert.placeholder}</p>
+      </div>
 
-      <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">输入微信公众号文章的URL（例如：https://mp.weixin.qq.com/s/...）</p>
+      {/* 主要操作 - 突出显示 */}
+      <div className="pt-4">
+        <Button
+          onClick={handleFetch}
+          disabled={!hasValidUrls || isFetching}
+          className="w-full h-14 sm:h-16 text-base sm:text-lg md:text-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-200 min-h-[56px] active:scale-[0.98]"
+          size="lg"
+        >
+          {isFetching ? (
+            <>
+              <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 mr-3 animate-spin" />
+              {t.convert.fetching}
+            </>
+          ) : (
+            t.convert.fetchButton
+          )}
+        </Button>
+      </div>
 
-      <Button
-        onClick={handleFetch}
-        disabled={!hasValidUrls || isFetching}
-        className="w-full h-12 md:h-14 text-base md:text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200"
-        size="lg"
-      >
-        {isFetching ? (
-          <>
-            <Loader2 className="h-4 w-4 md:h-5 md:w-5 mr-2 animate-spin" />
-            获取中...
-          </>
-        ) : (
-          "获取文章内容"
-        )}
-      </Button>
-
-      <Alert className="bg-blue-50/50 dark:bg-blue-950/10 border-blue-200/50 dark:border-blue-900/30">
+      {/* 帮助信息 - 弱化显示 */}
+      <Alert className="bg-muted/30 dark:bg-muted/20 border-border/30">
         <AlertDescription>
-          <p className="font-semibold mb-3 text-sm md:text-base text-foreground">使用说明：</p>
-          <ol className="space-y-2 text-sm md:text-base text-muted-foreground leading-relaxed list-decimal list-inside">
-            <li>输入一个或多个微信公众号文章链接</li>
-            <li>点击"获取文章内容"按钮，工具将获取文章的原始内容</li>
-            <li>在内容预览页面中，点击"转换为Markdown"按钮进行转换</li>
-            <li>图片将会自动下载到本地，并在Markdown中使用相对路径引用</li>
-            <li>完成后可以复制Markdown内容或下载为.md文件</li>
+          <p className="font-medium mb-3 text-xs sm:text-sm text-muted-foreground/70">{t.convert.usageTitle}</p>
+          <ol className="space-y-2 text-xs sm:text-sm text-muted-foreground/60 leading-relaxed list-decimal list-inside">
+            <li>{t.convert.usage1}</li>
+            <li>{t.convert.usage2}</li>
+            <li>{t.convert.usage3}</li>
+            <li>{t.convert.usage4}</li>
+            <li>{t.convert.usage5}</li>
           </ol>
         </AlertDescription>
       </Alert>

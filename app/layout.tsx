@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ThemeProvider } from "@/components/theme-provider"
 import { ViewTransitionProvider } from "@/components/view-transition-provider"
+import { LanguageProvider } from "@/lib/i18n/context"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -41,17 +42,19 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ViewTransitionProvider>
-            {children}
-          </ViewTransitionProvider>
-          <Analytics />
-        </ThemeProvider>
+        <LanguageProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ViewTransitionProvider>
+              {children}
+            </ViewTransitionProvider>
+            <Analytics />
+          </ThemeProvider>
+        </LanguageProvider>
       </body>
     </html>
   )

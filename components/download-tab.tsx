@@ -7,6 +7,7 @@ import { FileText, Package } from "lucide-react"
 import { ImageIcon } from "lucide-react"
 import JSZip from "jszip"
 import { useToast } from "@/hooks/use-toast"
+import { useLanguage } from "@/lib/i18n/context"
 
 interface ImageData {
   originalUrl: string
@@ -29,6 +30,7 @@ interface DownloadTabProps {
 
 export function DownloadTab({ articles }: DownloadTabProps) {
   const { toast } = useToast()
+  const { t } = useLanguage()
 
   const downloadMarkdown = (article: Article) => {
     if (!article.markdown) return
@@ -37,15 +39,15 @@ export function DownloadTab({ articles }: DownloadTabProps) {
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = `${article.title || "article"}.md`
+    a.download = `${article.title || t.download.untitled}.md`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
 
     toast({
-      title: "下载成功",
-      description: `已下载 ${article.title || "文章"}.md`,
+      title: t.language === "zh" ? "下载成功" : "Download Successful",
+      description: t.language === "zh" ? `已下载 ${article.title || "文章"}.md` : `Downloaded ${article.title || "article"}.md`,
     })
   }
 
@@ -81,15 +83,15 @@ export function DownloadTab({ articles }: DownloadTabProps) {
     URL.revokeObjectURL(url)
 
     toast({
-      title: "下载成功",
-      description: `已下载完整包 ${article.title || "文章"}.zip`,
+      title: t.language === "zh" ? "下载成功" : "Download Successful",
+      description: t.language === "zh" ? `已下载完整包 ${article.title || "文章"}.zip` : `Downloaded complete package ${article.title || "article"}.zip`,
     })
   }
 
   const downloadAllAsZip = async () => {
     toast({
-      title: "正在打包",
-      description: "正在打包所有文章和图片...",
+      title: t.language === "zh" ? "正在打包" : "Packaging",
+      description: t.language === "zh" ? "正在打包所有文章和图片..." : "Packaging all articles and images...",
     })
 
     const zip = new JSZip()
@@ -123,43 +125,45 @@ export function DownloadTab({ articles }: DownloadTabProps) {
     URL.revokeObjectURL(url)
 
     toast({
-      title: "下载成功",
-      description: "已下载所有文章完整包",
+      title: t.language === "zh" ? "下载成功" : "Download Successful",
+      description: t.language === "zh" ? "已下载所有文章完整包" : "Downloaded complete package with all articles",
     })
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-2">下载文件</h2>
-        <p className="text-muted-foreground">将转换后的内容保存为 Markdown 文件</p>
+    <div className="space-y-6 sm:space-y-8 md:space-y-10">
+      {/* 标题区域 - 弱化描述 */}
+      <div className="space-y-2">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{t.download.title}</h2>
+        <p className="text-sm sm:text-base text-muted-foreground/70">{t.download.description}</p>
       </div>
 
-      <div className="grid gap-4">
+      {/* 下载卡片 - 增加间距 */}
+      <div className="grid gap-4 sm:gap-6 md:gap-8">
         {articles.map((article) => (
-          <Card key={article.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
+          <Card key={article.id} className="border-border/50 hover:border-primary/30 hover:shadow-lg transition-all duration-200 cursor-pointer p-6 sm:p-8">
+            <CardHeader className="pb-4">
+              <div className="flex items-start justify-between gap-4 sm:gap-6">
                 <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg mb-1">{article.title || "未命名文章"}</CardTitle>
-                  <CardDescription className="truncate">{article.url}</CardDescription>
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl mb-2 text-foreground font-bold line-clamp-2">{article.title || t.download.untitled}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm truncate text-muted-foreground/70">{article.url}</CardDescription>
                 </div>
                 {article.images && article.images.length > 0 && (
-                  <Badge variant="secondary" className="shrink-0">
-                    <ImageIcon className="h-3 w-3 mr-1" />
-                    {article.images.length} 张图片
+                  <Badge variant="secondary" className="shrink-0 text-xs sm:text-sm px-3 py-1">
+                    <ImageIcon className="h-3.5 w-3.5 mr-1.5" />
+                    {article.images.length} {t.download.images}
                   </Badge>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="flex gap-2">
-              <Button onClick={() => downloadMarkdown(article)} variant="outline" className="flex-1">
-                <FileText className="h-4 w-4 mr-2" />仅 Markdown
+            <CardContent className="flex flex-col sm:flex-row gap-3 pt-0">
+              <Button onClick={() => downloadMarkdown(article)} variant="outline" className="flex-1 min-h-[48px] text-sm sm:text-base">
+                <FileText className="h-4 w-4 mr-2" />{t.download.markdownOnly}
               </Button>
               {article.images && article.images.length > 0 && (
-                <Button onClick={() => downloadWithImages(article)} className="flex-1">
+                <Button onClick={() => downloadWithImages(article)} className="flex-1 min-h-[48px] text-sm sm:text-base font-semibold">
                   <Package className="h-4 w-4 mr-2" />
-                  完整包（含图片）
+                  {t.download.fullPackage}
                 </Button>
               )}
             </CardContent>
@@ -167,15 +171,15 @@ export function DownloadTab({ articles }: DownloadTabProps) {
         ))}
 
         {articles.length > 1 && (
-          <Card className="border-primary">
-            <CardHeader>
-              <CardTitle className="text-lg">下载全部</CardTitle>
-              <CardDescription>下载包含所有文章和图片的完整压缩包</CardDescription>
+          <Card className="border-primary/50 hover:border-primary transition-all duration-200 p-6 sm:p-8">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg sm:text-xl md:text-2xl text-foreground font-bold">{t.download.downloadAll}</CardTitle>
+              <CardDescription className="text-xs sm:text-sm text-muted-foreground/70 mt-2">{t.download.downloadAllDesc}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button onClick={downloadAllAsZip} className="w-full" size="lg">
-                <Package className="h-4 w-4 mr-2" />
-                下载完整压缩包
+            <CardContent className="pt-0">
+              <Button onClick={downloadAllAsZip} className="w-full min-h-[52px] text-base sm:text-lg font-semibold" size="lg">
+                <Package className="h-5 w-5 mr-2" />
+                {t.download.downloadAllButton}
               </Button>
             </CardContent>
           </Card>

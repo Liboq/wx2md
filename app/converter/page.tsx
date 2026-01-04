@@ -11,6 +11,7 @@ import { Header } from "@/components/header"
 import { saveToHistory, type HistoryArticle } from "@/lib/history-storage"
 import { cn } from "@/lib/utils"
 import { FileText, Eye, Code2, Download, History } from "lucide-react"
+import { useLanguage } from "@/lib/i18n/context"
 
 interface ImageData {
   originalUrl: string
@@ -31,6 +32,7 @@ interface Article {
 }
 
 export default function ConverterPage() {
+  const { t } = useLanguage()
   const [articles, setArticles] = useState<Article[]>([{ id: "1", url: "", status: "idle" }])
   const [activeTab, setActiveTab] = useState("convert")
 
@@ -178,27 +180,29 @@ export default function ConverterPage() {
   const convertedArticles = articles.filter((a) => a.status === "converted")
 
   const navItems = [
-    { value: "convert", label: "转换", icon: FileText },
-    { value: "html-preview", label: "内容预览", icon: Eye, disabled: fetchedArticles.length === 0 },
-    { value: "markdown-preview", label: "MD预览", icon: Code2, disabled: convertedArticles.length === 0 },
-    { value: "download", label: "下载", icon: Download, disabled: convertedArticles.length === 0 },
-    { value: "history", label: "历史记录", icon: History },
+    { value: "convert", label: t.converter.tabConvert, icon: FileText },
+    { value: "html-preview", label: t.converter.tabHtmlPreview, icon: Eye, disabled: fetchedArticles.length === 0 },
+    { value: "markdown-preview", label: t.converter.tabMarkdownPreview, icon: Code2, disabled: convertedArticles.length === 0 },
+    { value: "download", label: t.converter.tabDownload, icon: Download, disabled: convertedArticles.length === 0 },
+    { value: "history", label: t.converter.tabHistory, icon: History },
   ]
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       <Header />
 
-      <main className="container mx-auto px-4 py-8 md:py-12 max-w-7xl">
-        <div className="mb-8 md:mb-12 text-center">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-3 text-balance text-foreground">微信公众号文章转换器</h1>
-          <p className="text-base md:text-lg text-muted-foreground">将微信公众号文章轻松转换为 Markdown 格式</p>
+      <main className="container mx-auto px-4 sm:px-6 py-8 sm:py-10 md:py-12 lg:py-16 max-w-7xl">
+        {/* 标题区域 - 增加呼吸感，弱化次要信息 */}
+        <div className="mb-8 sm:mb-10 md:mb-12 lg:mb-16 text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 md:mb-5 text-balance text-foreground">{t.converter.title}</h1>
+          <p className="text-sm sm:text-base md:text-lg text-muted-foreground/80 max-w-2xl mx-auto">{t.converter.subtitle}</p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 md:gap-8">
+        {/* 主要内容区域 - 增加间距 */}
+        <div className="flex flex-col md:flex-row gap-6 sm:gap-8 md:gap-10 lg:gap-12">
           {/* 导航栏 - 移动端在上方，桌面端在左侧 */}
-          <Card className="w-full md:w-52 shrink-0 p-0 md:p-4 shadow-sm border border-border/50 md:h-fit md:sticky md:top-8 overflow-hidden bg-card">
-            <nav className="flex md:flex-col gap-2 md:gap-0 md:space-y-1 overflow-x-auto md:overflow-x-visible scrollbar-hide md:scrollbar-default px-3 py-3 md:px-2 md:py-2">
+          <Card className="w-full md:w-56 lg:w-64 shrink-0 p-0 md:p-5 md:h-fit md:sticky md:top-10 overflow-hidden">
+            <nav className="flex md:flex-col gap-2 md:gap-0 md:space-y-2 overflow-x-auto md:overflow-x-visible scrollbar-hide md:scrollbar-default px-4 py-3 md:px-3 md:py-3">
               {navItems.map((item) => {
                 const Icon = item.icon
                 return (
@@ -207,11 +211,11 @@ export default function ConverterPage() {
                     onClick={() => !item.disabled && setActiveTab(item.value)}
                     disabled={item.disabled}
                     className={cn(
-                      "flex items-center justify-center md:justify-start gap-2 md:gap-3 px-4 md:px-4 py-2.5 md:py-3 rounded-lg text-xs md:text-sm font-medium transition-all whitespace-nowrap",
-                      "cursor-pointer hover:bg-accent/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent",
+                      "flex items-center justify-center md:justify-start gap-2 md:gap-3 px-3 sm:px-4 md:px-4 py-2.5 md:py-3 rounded-xl text-xs sm:text-sm md:text-sm font-semibold transition-all duration-300 whitespace-nowrap min-h-[44px]",
+                      "cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:backdrop-filter disabled:blur-sm",
                       "md:w-full shrink-0",
                       activeTab === item.value
-                        ? "bg-primary text-primary-foreground shadow-sm"
+                        ? "clay-button text-primary-foreground"
                         : "text-muted-foreground hover:text-foreground hover:bg-accent/30",
                     )}
                   >
@@ -223,9 +227,9 @@ export default function ConverterPage() {
             </nav>
           </Card>
 
-          {/* 内容区 */}
-          <Card className="flex-1 shadow-sm border border-border/50 w-full bg-card">
-            <div className="p-6 md:p-8">
+          {/* 内容区 - 增加内边距 */}
+          <Card className="flex-1 w-full">
+            <div className="p-6 sm:p-8 md:p-10 lg:p-12">
               {activeTab === "convert" && (
                 <ConvertTab
                   articles={articles}
@@ -242,7 +246,16 @@ export default function ConverterPage() {
                 <HtmlPreviewTab articles={fetchedArticles} onConvert={convertToMarkdown} />
               )}
 
-              {activeTab === "markdown-preview" && <MarkdownPreviewTab articles={convertedArticles} />}
+              {activeTab === "markdown-preview" && (
+                <MarkdownPreviewTab
+                  articles={convertedArticles}
+                  onUpdateMarkdown={(articleId, markdown) => {
+                    setArticles((prev) =>
+                      prev.map((a) => (a.id === articleId ? { ...a, markdown } : a)),
+                    )
+                  }}
+                />
+              )}
 
               {activeTab === "download" && <DownloadTab articles={convertedArticles} />}
 

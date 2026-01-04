@@ -4,11 +4,14 @@ import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Copy, Check, FileText, Image as ImageIcon } from "lucide-react"
-import { useState } from "react"
+import { Textarea } from "@/components/ui/textarea"
+import { Copy, Check, FileText, Image as ImageIcon, Save, Edit } from "lucide-react"
+import { useState, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { FireflyCardConfigDialog, type FireflyCardConfig } from "@/components/firefly-card-config-dialog"
+import { useLanguage } from "@/lib/i18n/context"
+import { useToast } from "@/hooks/use-toast"
 
 interface Article {
   id: string
@@ -18,17 +21,26 @@ interface Article {
 
 interface MarkdownPreviewTabProps {
   articles: Article[]
+  onUpdateMarkdown?: (articleId: string, markdown: string) => void
 }
 
 const FIREFLY_CARD_API_URL = "https://fireflycard-api.302ai.cn/api/saveImg"
 
-export function MarkdownPreviewTab({ articles }: MarkdownPreviewTabProps) {
+export function MarkdownPreviewTab({ articles, onUpdateMarkdown }: MarkdownPreviewTabProps) {
+  const { t } = useLanguage()
+  const { toast } = useToast()
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
+  // 存储每个文章的编辑内容
+  const [editedContent, setEditedContent] = useState<Record<string, string>>({})
+  // 跟踪哪些文章有未保存的更改
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<Record<string, boolean>>({})
 
   const copyToClipboard = (text: string, articleId: string) => {
-    navigator.clipboard.writeText(text)
+    // 如果正在编辑，使用编辑后的内容
+    const contentToCopy = editedContent[articleId] !== undefined ? editedContent[articleId] : text
+    navigator.clipboard.writeText(contentToCopy)
     setCopiedId(articleId)
     setTimeout(() => setCopiedId(null), 2000)
   }
@@ -37,7 +49,11 @@ export function MarkdownPreviewTab({ articles }: MarkdownPreviewTabProps) {
     if (!selectedArticle) return
 
     try {
-      const content = config.form.content || selectedArticle.markdown || ""
+      // 使用编辑后的内容（如果有）或原始内容
+      const currentContent = editedContent[selectedArticle.id] !== undefined
+        ? editedContent[selectedArticle.id]
+        : selectedArticle.markdown || ""
+      const content = config.form.content || currentContent
       const height = config.style?.height || 1200
       const width = config.style?.width || 800
       const padding = config.style?.padding || 40
@@ -262,32 +278,83 @@ export function MarkdownPreviewTab({ articles }: MarkdownPreviewTabProps) {
     setConfigDialogOpen(true)
   }
 
+  // 初始化编辑内容
+  useEffect(() => {
+    const initialContent: Record<string, string> = {}
+    articles.forEach((article) => {
+      if (!editedContent[article.id] && article.markdown) {
+        initialContent[article.id] = article.markdown
+      }
+    })
+    if (Object.keys(initialContent).length > 0) {
+      setEditedContent((prev) => ({ ...prev, ...initialContent }))
+    }
+  }, [articles])
+
+  // 处理源码编辑
+  const handleSourceChange = (articleId: string, value: string) => {
+    setEditedContent((prev) => ({ ...prev, [articleId]: value }))
+    const originalContent = articles.find((a) => a.id === articleId)?.markdown || ""
+    setHasUnsavedChanges((prev) => ({
+      ...prev,
+      [articleId]: value !== originalContent,
+    }))
+  }
+
+  // 保存编辑的内容
+  const handleSave = (articleId: string) => {
+    const content = editedContent[articleId]
+    if (content !== undefined && onUpdateMarkdown) {
+      onUpdateMarkdown(articleId, content)
+      setHasUnsavedChanges((prev) => ({ ...prev, [articleId]: false }))
+      toast({
+        title: t.language === "zh" ? "保存成功" : "Saved Successfully",
+        description: t.language === "zh" ? "Markdown 内容已更新" : "Markdown content updated",
+      })
+    }
+  }
+
+  // 重置编辑内容
+  const handleReset = (articleId: string) => {
+    const originalContent = articles.find((a) => a.id === articleId)?.markdown || ""
+    setEditedContent((prev) => ({ ...prev, [articleId]: originalContent }))
+    setHasUnsavedChanges((prev) => ({ ...prev, [articleId]: false }))
+  }
+
+  // 获取当前显示的内容（编辑后的或原始的）
+  const getDisplayContent = (article: Article) => {
+    return editedContent[article.id] !== undefined
+      ? editedContent[article.id]
+      : article.markdown || ""
+  }
+
   if (articles.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-        <p>暂无Markdown内容</p>
+      <div className="text-center py-8 sm:py-12 text-muted-foreground">
+        <FileText className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-4 opacity-50" />
+        <p className="text-sm sm:text-base">暂无Markdown内容</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-2">Markdown预览</h2>
-        <p className="text-muted-foreground">查看转换后的Markdown内容</p>
+    <div className="space-y-6 sm:space-y-8 md:space-y-10">
+      {/* 标题区域 - 弱化描述 */}
+      <div className="space-y-2">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">{t.markdownPreview.title}</h2>
+        <p className="text-sm sm:text-base text-muted-foreground/70">{t.markdownPreview.description}</p>
       </div>
 
       {articles.map((article) => (
-        <Card key={article.id} className="p-6">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <h3 className="text-xl font-semibold text-foreground">{article.title || "无标题"}</h3>
-            <div className="flex items-center gap-2">
+        <Card key={article.id} className="p-6 sm:p-8 md:p-10 border-border/50">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 sm:gap-6">
+            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground flex-1">{article.title || (language === "zh" ? "无标题" : "Untitled")}</h3>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => openConfigDialog(article)}
-                className="border-border/50 hover:border-primary/30"
+                className="border-border/50 hover:border-primary/30 flex-1 sm:flex-none min-h-[44px]"
               >
                 <ImageIcon className="h-4 w-4 mr-2" />
                 导出为图片
@@ -296,17 +363,17 @@ export function MarkdownPreviewTab({ articles }: MarkdownPreviewTabProps) {
                 variant="outline"
                 size="sm"
                 onClick={() => copyToClipboard(article.markdown || "", article.id)}
-                className="border-border/50 hover:border-primary/30"
+                className="border-border/50 hover:border-primary/30 flex-1 sm:flex-none min-h-[44px]"
               >
                 {copiedId === article.id ? (
                   <>
                     <Check className="h-4 w-4 mr-2" />
-                    已复制
+                    {t.markdownPreview.copied}
                   </>
                 ) : (
                   <>
                     <Copy className="h-4 w-4 mr-2" />
-                    复制Markdown
+                    {t.markdownPreview.copyMarkdown}
                   </>
                 )}
               </Button>
@@ -315,22 +382,61 @@ export function MarkdownPreviewTab({ articles }: MarkdownPreviewTabProps) {
 
           <Tabs defaultValue="preview" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="preview">预览</TabsTrigger>
-              <TabsTrigger value="source">源码</TabsTrigger>
+              <TabsTrigger value="preview" className="text-xs sm:text-sm">预览</TabsTrigger>
+              <TabsTrigger value="source" className="text-xs sm:text-sm">源码</TabsTrigger>
             </TabsList>
 
             <TabsContent value="preview" className="mt-4">
-              <ScrollArea className="h-[500px] w-full rounded-md border p-4">
+              <ScrollArea className="h-[400px] sm:h-[500px] w-full rounded-md border border-border/50 p-3 sm:p-4">
                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{article.markdown || ""}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{getDisplayContent(article)}</ReactMarkdown>
                 </div>
               </ScrollArea>
             </TabsContent>
 
             <TabsContent value="source" className="mt-4">
-              <ScrollArea className="h-[500px] w-full rounded-md border p-4">
-                <pre className="text-sm whitespace-pre-wrap font-mono">{article.markdown}</pre>
-              </ScrollArea>
+              <div className="space-y-3">
+                {/* 编辑工具栏 */}
+                {hasUnsavedChanges[article.id] && (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border border-primary/20">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Edit className="h-4 w-4 text-primary" />
+                      <span className="text-primary font-medium">
+                        {t.language === "zh" ? "有未保存的更改" : "Unsaved changes"}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleReset(article.id)}
+                        className="h-8 text-xs"
+                      >
+                        {t.language === "zh" ? "重置" : "Reset"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSave(article.id)}
+                        className="h-8 text-xs"
+                        disabled={!onUpdateMarkdown}
+                      >
+                        <Save className="h-3 w-3 mr-1.5" />
+                        {t.language === "zh" ? "保存" : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* 可编辑的源码区域 */}
+                <div className="relative">
+                  <Textarea
+                    value={editedContent[article.id] !== undefined ? editedContent[article.id] : article.markdown || ""}
+                    onChange={(e) => handleSourceChange(article.id, e.target.value)}
+                    className="h-[400px] sm:h-[500px] w-full rounded-md border border-border/50 p-3 sm:p-4 font-mono text-xs sm:text-sm resize-none focus:ring-2 focus:ring-primary/20"
+                    placeholder={t.language === "zh" ? "在此编辑 Markdown 源码..." : "Edit Markdown source here..."}
+                  />
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </Card>
@@ -340,7 +446,7 @@ export function MarkdownPreviewTab({ articles }: MarkdownPreviewTabProps) {
         <FireflyCardConfigDialog
           open={configDialogOpen}
           onOpenChange={setConfigDialogOpen}
-          markdownContent={selectedArticle.markdown || ""}
+          markdownContent={getDisplayContent(selectedArticle)}
           articleTitle={selectedArticle.title}
           onExport={handleExportFireflyCard}
         />
